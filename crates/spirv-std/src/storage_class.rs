@@ -112,7 +112,7 @@ storage_class! {
     /// Intended to contain a small bank of values pushed from the client API.
     /// Variables declared with this storage class are read-only, and must not
     /// have initializers.
-    #[spirv(push_constant)] storage_class PushConstant;
+    #[spirv(push_constant, block)] storage_class PushConstant;
 
     /// Atomic counter-specific memory.
     ///
@@ -131,7 +131,7 @@ storage_class! {
     ///
     /// Shared externally, readable and writable, visible across all functions
     /// in all invocations in all work groups.
-    #[spirv(storage_buffer)] writeable storage_class StorageBuffer;
+    #[spirv(storage_buffer, block)] writeable storage_class StorageBuffer;
 
     /// Used for storing arbitrary data associated with a ray to pass
     /// to callables. (Requires `SPV_KHR_ray_tracing` extension)

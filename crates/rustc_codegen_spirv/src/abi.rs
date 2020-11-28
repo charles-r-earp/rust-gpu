@@ -405,7 +405,8 @@ fn trans_scalar<'tcx>(
         Primitive::Pointer => {
             let (storage_class, pointee_ty) = dig_scalar_pointee(cx, ty, index);
             // Default to function storage class.
-            let storage_class = storage_class.unwrap_or(StorageClass::Function);
+            let (storage_class, is_block) =
+                storage_class.unwrap_or((StorageClass::Function, false));
             // Pointers can be recursive. So, record what we're currently translating, and if we're already translating
             // the same type, emit an OpTypeForwardPointer and use that ID.
             if let Some(predefined_result) =
@@ -416,6 +417,21 @@ fn trans_scalar<'tcx>(
                 predefined_result
             } else {
                 let pointee = pointee_ty.spirv_type(cx);
+                let pointee = if is_block {
+                    let (field_offsets, offset, align) = auto_struct_layout(cx, &[pointee]);
+                    SpirvType::Adt {
+                        name: "<block>".into(),
+                        align,
+                        size: offset,
+                        field_types: vec![pointee],
+                        field_offsets,
+                        field_names: None,
+                        is_block: true,
+                    }
+                    .def(cx)
+                } else {
+                    pointee
+                };
                 cx.type_cache
                     .recursive_pointee_cache
                     .end(cx, pointee_ty, storage_class, pointee)
@@ -438,7 +454,7 @@ fn dig_scalar_pointee<'tcx>(
     cx: &CodegenCx<'tcx>,
     ty: TyAndLayout<'tcx>,
     index: Option<usize>,
-) -> (Option<StorageClass>, PointeeTy<'tcx>) {
+) -> (Option<(StorageClass, bool)>, PointeeTy<'tcx>) {
     match *ty.ty.kind() {
         TyKind::Ref(_, elem_ty, _) | TyKind::RawPtr(TypeAndMut { ty: elem_ty, .. }) => {
             let elem = cx.layout_of(elem_ty);
@@ -476,7 +492,7 @@ fn dig_scalar_pointee_adt<'tcx>(
     cx: &CodegenCx<'tcx>,
     ty: TyAndLayout<'tcx>,
     index: Option<usize>,
-) -> (Option<StorageClass>, PointeeTy<'tcx>) {
+) -> (Option<(StorageClass, bool)>, PointeeTy<'tcx>) {
     // Storage classes can only be applied on structs containing a single pointer field (because we said so), so we only
     // need to handle the attribute here.
     let storage_class = get_storage_class(cx, ty);
@@ -541,39 +557,42 @@ fn dig_scalar_pointee_adt<'tcx>(
     match (storage_class, result) {
         (storage_class, (None, result)) => (storage_class, result),
         (None, (storage_class, result)) => (storage_class, result),
-        (Some(one), (Some(two), _)) => cx.tcx.sess.fatal(&format!(
+        (Some((one, _)), (Some((two, _)), _)) => cx.tcx.sess.fatal(&format!(
             "Double-applied storage class ({:?} and {:?}) on type {}",
             one, two, ty.ty
         )),
     }
 }
 
-/// Handles `#[spirv(storage_class="blah")]`. Note this is only called in the scalar translation code, because this is only
+/// Handles `#[spirv(storage_class="blah")]` and `#[spirv(block)]`. Note this is only called in the scalar translation code, because this is only
 /// used for spooky builtin stuff, and we pinky promise to never have more than one pointer field in one of these.
+/// Important! The block decoration goes on the struct with the storage class, and generates hidden block decorated struct wrapper for the inner type.
+/// This is necessary because it hides the block struct from Rust, because otherwise it will generate a Function pointer for the AccessChain rather
+/// than the storage class of the outer struct. The block decorated struct doesn't serve any purpose in Rust, it is however required by the SPIR-V spec,
+/// and certain platforms will either reject or not run shaders correctly without it (in the case of StorageBuffers and PushConstants).
 // TODO: Enforce this is only used in spirv-std.
-fn get_storage_class<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Option<StorageClass> {
+fn get_storage_class<'tcx>(
+    cx: &CodegenCx<'tcx>,
+    ty: TyAndLayout<'tcx>,
+) -> Option<(StorageClass, bool)> {
+    let mut storage_class = None;
+    let mut is_block = false;
     if let TyKind::Adt(adt, _substs) = ty.ty.kind() {
         for attr in parse_attrs(cx, cx.tcx.get_attrs(adt.did)) {
-            if let SpirvAttribute::StorageClass(storage_class) = attr {
-                return Some(storage_class);
+            match attr {
+                SpirvAttribute::StorageClass(s) => {
+                    if storage_class.is_none() {
+                        storage_class.replace(s);
+                    }
+                }
+                SpirvAttribute::Block => {
+                    is_block = true;
+                }
+                _ => (),
             }
         }
     }
-    None
-}
-
-/// Handles `#[spirv(block)]`. Note this is only called in the scalar translation code, because this is only
-/// used for spooky builtin stuff, and we pinky promise to never have more than one pointer field in one of these.
-// TODO: Enforce this is only used in spirv-std.
-fn get_is_block_decorated<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> bool {
-    if let TyKind::Adt(adt, _substs) = ty.ty.kind() {
-        for attr in parse_attrs(cx, cx.tcx.get_attrs(adt.did)) {
-            if let SpirvAttribute::Block = attr {
-                return true;
-            }
-        }
-    }
-    false
+    storage_class.map(|s| (s, is_block))
 }
 
 fn trans_aggregate<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
@@ -706,7 +725,6 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
             }
         };
     }
-    let is_block = get_is_block_decorated(cx, ty);
     SpirvType::Adt {
         name,
         size,
@@ -714,7 +732,7 @@ fn trans_struct<'tcx>(cx: &CodegenCx<'tcx>, ty: TyAndLayout<'tcx>) -> Word {
         field_types,
         field_offsets,
         field_names: Some(field_names),
-        is_block,
+        is_block: false,
     }
     .def(cx)
 }
