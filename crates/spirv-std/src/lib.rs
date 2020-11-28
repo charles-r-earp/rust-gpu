@@ -42,30 +42,14 @@ pub use math_ext::MathExt;
 
 pub use glam;
 
-#[doc(hidden)]
-#[allow(unused_attributes)]
-#[spirv(block)]
-#[repr(transparent)]
-#[derive(Clone, Copy)]
-pub struct Block<T>(T);
-
 macro_rules! pointer_addrspace_write {
     (false) => {};
-    (false, block) => {};
     (true) => {
         #[inline]
         #[allow(unused_attributes)]
         #[spirv(really_unsafe_ignore_bitcasts)]
         pub fn store(&mut self, v: T) {
             *self.x = v
-        }
-    };
-    (true, block) => {
-        #[inline]
-        #[allow(unused_attributes)]
-        #[spirv(really_unsafe_ignore_bitcasts)]
-        pub fn store(&mut self, v: T) {
-            *self.x = Block(v);
         }
     };
 }
@@ -90,23 +74,8 @@ macro_rules! pointer_addrspace {
         }
     };
     ($storage_class:ident, $type_name:ident, $writeable:tt, block) => {
-        #[allow(unused_attributes)]
-        #[spirv($storage_class)]
-        pub struct $type_name<'a, T> {
-            x: &'a mut Block<T>,
-        }
-
-        impl<'a, T: Copy> $type_name<'a, T> {
-            #[inline]
-            #[allow(unused_attributes)]
-            #[spirv(really_unsafe_ignore_bitcasts)]
-            pub fn load(&self) -> T {
-                let block = *self.x;
-                block.0
-            }
-
-            pointer_addrspace_write!($writeable, block);
-        }
+        #[spirv(block)]
+        pointer_addrspace!($storage_class, $type_name, $writeable);
     };
 }
 
