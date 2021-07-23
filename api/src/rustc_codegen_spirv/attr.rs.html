@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/rustc_codegen_spirv/src/attr.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>attr.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button">?</button>
-                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../rustc_codegen_spirv/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -536,7 +535,6 @@
 <span id="533">533</span>
 <span id="534">534</span>
 <span id="535">535</span>
-<span id="536">536</span>
 </pre><pre class="rust">
 <span class="doccomment">//! `#[spirv(...)]` attribute support.</span>
 <span class="doccomment">//!</span>
@@ -544,9 +542,7 @@
 
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::codegen_cx::CodegenCx</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::symbols::Symbols</span>;
-<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{
-    <span class="ident">AccessQualifier</span>, <span class="ident">BuiltIn</span>, <span class="ident">Dim</span>, <span class="ident">ExecutionMode</span>, <span class="ident">ExecutionModel</span>, <span class="ident">ImageFormat</span>, <span class="ident">StorageClass</span>,
-};
+<span class="kw">use</span> <span class="ident">rspirv::spirv</span>::{<span class="ident">BuiltIn</span>, <span class="ident">ExecutionMode</span>, <span class="ident">ExecutionModel</span>, <span class="ident">StorageClass</span>};
 <span class="kw">use</span> <span class="ident">rustc_ast::Attribute</span>;
 <span class="kw">use</span> <span class="ident">rustc_hir</span> <span class="kw">as</span> <span class="ident">hir</span>;
 <span class="kw">use</span> <span class="ident">rustc_hir::def_id::LocalDefId</span>;
@@ -602,19 +598,11 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">IntrinsicType</span> {
     <span class="ident">GenericImageType</span>,
-    <span class="ident">ImageType</span> {
-        <span class="ident">dim</span>: <span class="ident">Dim</span>,
-        <span class="ident">depth</span>: <span class="ident">u32</span>,
-        <span class="ident">arrayed</span>: <span class="ident">u32</span>,
-        <span class="ident">multisampled</span>: <span class="ident">u32</span>,
-        <span class="ident">sampled</span>: <span class="ident">u32</span>,
-        <span class="ident">image_format</span>: <span class="ident">ImageFormat</span>,
-        <span class="ident">access_qualifier</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">AccessQualifier</span><span class="op">&gt;</span>,
-    },
     <span class="ident">Sampler</span>,
     <span class="ident">AccelerationStructureKhr</span>,
     <span class="ident">SampledImage</span>,
     <span class="ident">RayQueryKhr</span>,
+    <span class="ident">RuntimeArray</span>,
 }
 
 <span class="comment">// NOTE(eddyb) when adding new `#[spirv(...)]` attributes, the tests found inside</span>
@@ -635,6 +623,7 @@
     <span class="ident">Binding</span>(<span class="ident">u32</span>),
     <span class="ident">Flat</span>,
     <span class="ident">Invariant</span>,
+    <span class="ident">InputAttachmentIndex</span>(<span class="ident">u32</span>),
 
     <span class="comment">// `fn`/closure attributes:</span>
     <span class="ident">UnrollLoops</span>,
@@ -669,6 +658,7 @@
     <span class="kw">pub</span> <span class="ident">binding</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">flat</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">invariant</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">input_attachment_index</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 
     <span class="comment">// `fn`/closure attributes:</span>
     <span class="kw">pub</span> <span class="ident">unroll_loops</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Spanned</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -754,6 +744,12 @@
             <span class="ident">Binding</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">binding</span>, <span class="ident">value</span>, <span class="ident">span</span>, <span class="string">&quot;#[spirv(binding)]&quot;</span>),
             <span class="ident">Flat</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">flat</span>, (), <span class="ident">span</span>, <span class="string">&quot;#[spirv(flat)]&quot;</span>),
             <span class="ident">Invariant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">invariant</span>, (), <span class="ident">span</span>, <span class="string">&quot;#[spirv(invariant)]&quot;</span>),
+            <span class="ident">InputAttachmentIndex</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">input_attachment_index</span>,
+                <span class="ident">value</span>,
+                <span class="ident">span</span>,
+                <span class="string">&quot;#[spirv(attachment_index)]&quot;</span>,
+            ),
             <span class="ident">UnrollLoops</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">unroll_loops</span>, (), <span class="ident">span</span>, <span class="string">&quot;#[spirv(unroll_loops)]&quot;</span>),
             <span class="ident">InternalBufferLoad</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">try_insert</span>(
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">internal_buffer_load</span>,
@@ -847,7 +843,8 @@
                 <span class="op">|</span> <span class="ident">SpirvAttribute::DescriptorSet</span>(<span class="kw">_</span>)
                 <span class="op">|</span> <span class="ident">SpirvAttribute::Binding</span>(<span class="kw">_</span>)
                 <span class="op">|</span> <span class="ident">SpirvAttribute::Flat</span>
-                <span class="op">|</span> <span class="ident">SpirvAttribute::Invariant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">target</span> {
+                <span class="op">|</span> <span class="ident">SpirvAttribute::Invariant</span>
+                <span class="op">|</span> <span class="ident">SpirvAttribute::InputAttachmentIndex</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">target</span> {
                     <span class="ident">Target::Param</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">parent_hir_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tcx</span>.<span class="ident">hir</span>().<span class="ident">get_parent_node</span>(<span class="ident">hir_id</span>);
                         <span class="kw">let</span> <span class="ident">parent_is_entry_point</span> <span class="op">=</span>
@@ -951,19 +948,19 @@
     <span class="kw">fn</span> <span class="ident">visit_item</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">item</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">hir::Item</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">Target::from_item</span>(<span class="ident">item</span>);
         <span class="self">self</span>.<span class="ident">check_spirv_attributes</span>(<span class="ident">item</span>.<span class="ident">hir_id</span>(), <span class="ident">target</span>);
-        <span class="ident">intravisit::walk_item</span>(<span class="self">self</span>, <span class="ident">item</span>)
+        <span class="ident">intravisit::walk_item</span>(<span class="self">self</span>, <span class="ident">item</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">visit_generic_param</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">generic_param</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">hir::GenericParam</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">Target::from_generic_param</span>(<span class="ident">generic_param</span>);
         <span class="self">self</span>.<span class="ident">check_spirv_attributes</span>(<span class="ident">generic_param</span>.<span class="ident">hir_id</span>, <span class="ident">target</span>);
-        <span class="ident">intravisit::walk_generic_param</span>(<span class="self">self</span>, <span class="ident">generic_param</span>)
+        <span class="ident">intravisit::walk_generic_param</span>(<span class="self">self</span>, <span class="ident">generic_param</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">visit_trait_item</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">trait_item</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">hir::TraitItem</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">Target::from_trait_item</span>(<span class="ident">trait_item</span>);
         <span class="self">self</span>.<span class="ident">check_spirv_attributes</span>(<span class="ident">trait_item</span>.<span class="ident">hir_id</span>(), <span class="ident">target</span>);
-        <span class="ident">intravisit::walk_trait_item</span>(<span class="self">self</span>, <span class="ident">trait_item</span>)
+        <span class="ident">intravisit::walk_trait_item</span>(<span class="self">self</span>, <span class="ident">trait_item</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">visit_field_def</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">field</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">hir::FieldDef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) {
@@ -979,13 +976,13 @@
     <span class="kw">fn</span> <span class="ident">visit_foreign_item</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">f_item</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">hir::ForeignItem</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">Target::from_foreign_item</span>(<span class="ident">f_item</span>);
         <span class="self">self</span>.<span class="ident">check_spirv_attributes</span>(<span class="ident">f_item</span>.<span class="ident">hir_id</span>(), <span class="ident">target</span>);
-        <span class="ident">intravisit::walk_foreign_item</span>(<span class="self">self</span>, <span class="ident">f_item</span>)
+        <span class="ident">intravisit::walk_foreign_item</span>(<span class="self">self</span>, <span class="ident">f_item</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">visit_impl_item</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">impl_item</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">hir::ImplItem</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">target_from_impl_item</span>(<span class="self">self</span>.<span class="ident">tcx</span>, <span class="ident">impl_item</span>);
         <span class="self">self</span>.<span class="ident">check_spirv_attributes</span>(<span class="ident">impl_item</span>.<span class="ident">hir_id</span>(), <span class="ident">target</span>);
-        <span class="ident">intravisit::walk_impl_item</span>(<span class="self">self</span>, <span class="ident">impl_item</span>)
+        <span class="ident">intravisit::walk_impl_item</span>(<span class="self">self</span>, <span class="ident">impl_item</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">visit_stmt</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">stmt</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">hir::Stmt</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) {
@@ -993,7 +990,7 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">hir::StmtKind::Local</span>(<span class="ident">l</span>) <span class="op">=</span> <span class="ident">stmt</span>.<span class="ident">kind</span> {
             <span class="self">self</span>.<span class="ident">check_spirv_attributes</span>(<span class="ident">l</span>.<span class="ident">hir_id</span>, <span class="ident">Target::Statement</span>);
         }
-        <span class="ident">intravisit::walk_stmt</span>(<span class="self">self</span>, <span class="ident">stmt</span>)
+        <span class="ident">intravisit::walk_stmt</span>(<span class="self">self</span>, <span class="ident">stmt</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">visit_expr</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">expr</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">hir::Expr</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) {
@@ -1003,7 +1000,7 @@
         };
 
         <span class="self">self</span>.<span class="ident">check_spirv_attributes</span>(<span class="ident">expr</span>.<span class="ident">hir_id</span>, <span class="ident">target</span>);
-        <span class="ident">intravisit::walk_expr</span>(<span class="self">self</span>, <span class="ident">expr</span>)
+        <span class="ident">intravisit::walk_expr</span>(<span class="self">self</span>, <span class="ident">expr</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">visit_variant</span>(
@@ -1013,7 +1010,7 @@
         <span class="ident">item_id</span>: <span class="ident">HirId</span>,
     ) {
         <span class="self">self</span>.<span class="ident">check_spirv_attributes</span>(<span class="ident">variant</span>.<span class="ident">id</span>, <span class="ident">Target::Variant</span>);
-        <span class="ident">intravisit::walk_variant</span>(<span class="self">self</span>, <span class="ident">variant</span>, <span class="ident">generics</span>, <span class="ident">item_id</span>)
+        <span class="ident">intravisit::walk_variant</span>(<span class="self">self</span>, <span class="ident">variant</span>, <span class="ident">generics</span>, <span class="ident">item_id</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">visit_macro_def</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">macro_def</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tcx</span> <span class="ident">hir::MacroDef</span><span class="op">&lt;</span><span class="lifetime">&#39;tcx</span><span class="op">&gt;</span>) {
@@ -1069,11 +1066,10 @@
         <span class="ident">check_mod_attrs</span>: <span class="op">|</span><span class="ident">tcx</span>, <span class="ident">def_id</span><span class="op">|</span> {
             <span class="comment">// Run both the default checks, and our `#[spirv(...)]` ones.</span>
             (<span class="ident">rustc_interface::DEFAULT_QUERY_PROVIDERS</span>.<span class="ident">check_mod_attrs</span>)(<span class="ident">tcx</span>, <span class="ident">def_id</span>);
-            <span class="ident">check_mod_attrs</span>(<span class="ident">tcx</span>, <span class="ident">def_id</span>)
+            <span class="ident">check_mod_attrs</span>(<span class="ident">tcx</span>, <span class="ident">def_id</span>);
         },
         ..<span class="kw-2">*</span><span class="ident">providers</span>
     };
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
-    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_codegen_spirv" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>
