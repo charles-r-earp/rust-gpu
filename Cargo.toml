@@ -21,6 +21,8 @@ members = [
 
     "tests",
     "tests/deps-helper",
+    
+    "debug-printf-panic",
 ]
 
 [workspace.package]
